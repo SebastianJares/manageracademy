@@ -6,8 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "publish:pages": "npm run build && node scripts/publish-root.mjs",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run --root ."
   },
   "dependencies": {
     "html-to-image": "^1.11.13",
