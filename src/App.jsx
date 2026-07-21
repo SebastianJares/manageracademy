@@ -19,6 +19,7 @@ import {
 import ArchetypeArt from './components/ArchetypeArt';
 import {
   ARCHETYPES,
+  PREFERENCES,
   SECTIONS,
   SKILLS,
   TRAITS,
@@ -27,7 +28,7 @@ import {
 } from './data/questions';
 import { calculateProfile, scoreBand } from './lib/scoring';
 import { downloadAnalysis, downloadOutlookDraft } from './lib/reports';
-import { orderSituationOptions } from './lib/optionOrder';
+import { orderPreferenceOptions, orderSituationOptions } from './lib/optionOrder';
 import { clearState, exportState, loadState, saveState } from './lib/storage';
 
 const LogoMark = () => (
@@ -83,8 +84,8 @@ function Setup({ identity, onChange, onContinue, hasDraft }) {
           <span className="eyebrow"><Sparkles size={16} /> Výchozí bod akademie</span>
           <h1>Vytvořte si svůj<br /><em>manažerský profil.</em></h1>
           <p>
-            Tři krátké části propojí vaše pracovní tendence, každodenní dovednosti
-            a rozhodování v konkrétních situacích.
+            Čtyři části propojí pracovní tendence, každodenní dovednosti,
+            přirozené priority a rozhodování v konkrétních situacích.
           </p>
           <div className="chapter-preview">
             {SECTIONS.map((section) => (
@@ -179,14 +180,33 @@ function SectionIntro({ section, index, answered, total, onBack, onStart }) {
 
 function Quiz({ question, section, sectionIndex, questionIndex, sectionTotal, answeredValue, overallProgress, onAnswer, onBack }) {
   const isSituation = question.section === 'situations';
+  const isPreference = question.section === 'preferences';
   const displayedOptions = useMemo(() => (
     isSituation
       ? orderSituationOptions(question)
-      : question.scale
-  ), [isSituation, question]);
+      : isPreference
+        ? orderPreferenceOptions(question)
+        : question.scale
+  ), [isPreference, isSituation, question]);
+
+  const rankPreference = (optionId, rank) => {
+    const otherRank = rank === 'most' ? 'least' : 'most';
+    const next = {
+      most: answeredValue?.most ?? null,
+      least: answeredValue?.least ?? null,
+    };
+    if (next[rank] === optionId) {
+      next[rank] = null;
+    } else {
+      if (next[otherRank] === optionId) next[otherRank] = null;
+      next[rank] = optionId;
+    }
+    onAnswer(next);
+  };
 
   useEffect(() => {
     const handler = (event) => {
+      if (isPreference) return;
       if (!/^[1-5]$/.test(event.key)) return;
       const position = Number(event.key) - 1;
       const options = displayedOptions;
@@ -194,7 +214,7 @@ function Quiz({ question, section, sectionIndex, questionIndex, sectionTotal, an
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [displayedOptions, isSituation, onAnswer]);
+  }, [displayedOptions, isPreference, isSituation, onAnswer]);
 
   return (
     <main className="shell quiz-shell">
@@ -210,13 +230,13 @@ function Quiz({ question, section, sectionIndex, questionIndex, sectionTotal, an
         </div>
       </header>
 
-      <section className={`question-card enter-up ${isSituation ? 'situation-card' : ''}`}>
+      <section className={`question-card enter-up ${isSituation ? 'situation-card' : ''} ${isPreference ? 'preference-card' : ''}`}>
         <div className="question-meta">
           <button className="icon-button" type="button" onClick={onBack} aria-label="Předchozí otázka">
             <ArrowLeft size={19} />
           </button>
           <span>Otázka {questionIndex + 1} / {sectionTotal}</span>
-          <span className="question-kind">{isSituation ? 'Situace' : sectionIndex === 0 ? 'Tendence' : 'Chování'}</span>
+          <span className="question-kind">{isSituation ? 'Situace' : isPreference ? 'Priority' : sectionIndex === 0 ? 'Tendence' : 'Chování'}</span>
         </div>
         <h1>{question.text}</h1>
         {isSituation ? (
@@ -233,6 +253,34 @@ function Quiz({ question, section, sectionIndex, questionIndex, sectionTotal, an
                 <ChevronRight className="option-arrow" size={18} />
               </button>
             ))}
+          </div>
+        ) : isPreference ? (
+          <div className="preference-wrap">
+            <div className="preference-helper">
+              <span><strong>1.</strong> Vyberte nejvíc</span>
+              <span><strong>2.</strong> Vyberte nejméně</span>
+            </div>
+            <div className="preference-options">
+              {displayedOptions.map((option, index) => {
+                const isMost = answeredValue?.most === option.id;
+                const isLeast = answeredValue?.least === option.id;
+                return (
+                  <article className={`preference-option ${isMost ? 'is-most' : ''} ${isLeast ? 'is-least' : ''}`} key={option.id}>
+                    <span className="option-key">{String.fromCharCode(65 + index)}</span>
+                    <p>{option.text}</p>
+                    <div className="preference-ranks">
+                      <button className={isMost ? 'selected' : ''} type="button" onClick={() => rankPreference(option.id, 'most')}>
+                        {isMost && <Check size={14} />} Nejvíc mě vystihuje
+                      </button>
+                      <button className={isLeast ? 'selected' : ''} type="button" onClick={() => rankPreference(option.id, 'least')}>
+                        {isLeast && <Check size={14} />} Nejméně mě vystihuje
+                      </button>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+            <p className="preference-note">Všechny možnosti jsou hodnotné. Vybíráte pouze jejich pořadí pro sebe.</p>
           </div>
         ) : (
           <div className="likert-wrap">
@@ -271,9 +319,20 @@ function StatBlock({ skillKey, score, stat, compact = false }) {
   );
 }
 
+function PreferenceBar({ preferenceKey, score }) {
+  const preference = PREFERENCES[preferenceKey];
+  return (
+    <div className="preference-bar">
+      <div><span><i style={{ background: preference.color }} />{preference.short}</span><strong>{score}</strong></div>
+      <div className="preference-track"><span style={{ width: `${score}%`, background: preference.color }} /></div>
+    </div>
+  );
+}
+
 function ManagerCard({ profile, cardRef }) {
   const primary = ARCHETYPES[profile.primary];
   const secondary = ARCHETYPES[profile.secondary];
+  const preference = profile.analysis.preference;
 
   return (
     <article className="manager-card" ref={cardRef} style={{ '--role-color': primary.color }}>
@@ -298,6 +357,13 @@ function ManagerCard({ profile, cardRef }) {
         </div>
       </div>
       <p className="card-motto">„{primary.motto}“</p>
+      <div
+        className="card-preference-signature"
+        style={{ '--preference-a': preference.top.color, '--preference-b': preference.second.color }}
+      >
+        <span>Manažerský kompas</span>
+        <strong>{preference.top.short} <small>+</small> {preference.second.short}</strong>
+      </div>
       <div className="card-stats">
         {Object.entries(profile.stats).map(([key, stat]) => (
           <StatBlock key={key} skillKey={key} stat={stat} compact />
@@ -416,6 +482,35 @@ function Results({ profile, onNewAssessment, onReset, onExport }) {
               <small>{profile.responseQuality.note}</small>
             </article>
           </div>
+
+          <article
+            className="glass-panel preference-profile-panel"
+            style={{ '--preference-a': profile.analysis.preference.top.color, '--preference-b': profile.analysis.preference.second.color }}
+          >
+            <div className="preference-profile-copy">
+              <span className="aside-kicker">Relativní zdroje energie</span>
+              <h2>Manažerský kompas · {profile.analysis.preference.title}</h2>
+              <p>{profile.analysis.preference.top.description}</p>
+              <p>{profile.analysis.preference.second.description}</p>
+              <div className="preference-alignment">
+                <strong>{profile.analysis.preference.alignmentLabel}</strong>
+                <span>{profile.analysis.preference.alignmentText}</span>
+              </div>
+            </div>
+            <div className="preference-profile-data">
+              <div className="preference-list">
+                {Object.entries(profile.preferenceScores)
+                  .sort(([, a], [, b]) => b - a)
+                  .map(([key, score]) => <PreferenceBar key={key} preferenceKey={key} score={score} />)}
+              </div>
+              <div className="preference-low-note">
+                <strong>Méně přirozená priorita · {profile.analysis.preference.low.label}</strong>
+                <span>{profile.analysis.preference.low.low}</span>
+              </div>
+              <small>{profile.analysis.preference.note}</small>
+            </div>
+            <div className="preference-shadow"><strong>Možný stín dominantní preference</strong><span>{profile.analysis.preference.watchout}</span></div>
+          </article>
 
           <div className="analysis-grid refined-analysis-grid">
             <div className="glass-panel analysis-panel skills-panel">
@@ -573,7 +668,11 @@ export default function App() {
   const section = SECTIONS[sectionIndex];
   const questions = questionsBySection[section?.id] ?? [];
   const question = questions[questionIndex];
-  const answeredCount = Object.keys(answers).filter((key) => answers[key] != null).length;
+  const answeredCount = allQuestions.filter((item) => {
+    const value = answers[item.id];
+    if (item.section !== 'preferences') return value != null;
+    return Boolean(value?.most && value?.least && value.most !== value.least);
+  }).length;
   const latestProfile = attempts.at(-1);
 
   useEffect(() => {
@@ -620,9 +719,12 @@ export default function App() {
 
   const answerQuestion = (value) => {
     if (advancing.current) return;
-    advancing.current = true;
     const nextAnswers = { ...answers, [question.id]: value };
     setAnswers(nextAnswers);
+    const isCompletePreference = question.section !== 'preferences'
+      || Boolean(value?.most && value?.least && value.most !== value.least);
+    if (!isCompletePreference) return;
+    advancing.current = true;
     window.setTimeout(() => {
       if (questionIndex === questions.length - 1 && sectionIndex === SECTIONS.length - 1) {
         const profile = calculateProfile(nextAnswers, identity);

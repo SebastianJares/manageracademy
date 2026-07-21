@@ -107,6 +107,57 @@ export const ARCHETYPES = {
   },
 };
 
+export const PREFERENCES = {
+  driver: {
+    label: 'Výsledek a tempo',
+    short: 'Výsledek',
+    color: '#ffb44a',
+    description: 'Energii vám pravděpodobně dává viditelný posun, rozhodnutí a dotažení podstatné práce.',
+    low: 'Tlak na rychlé uzavření věcí pro vás nemusí být přirozeným zdrojem energie; tempo proto můžete držet spíše vědomě nebo prostřednictvím systému.',
+    watchout: 'Při přehnaném použití může rychlost předběhnout porozumění, učení lidí nebo kvalitu rozhodnutí.',
+  },
+  strategist: {
+    label: 'Směr a souvislosti',
+    short: 'Směr',
+    color: '#7ddcff',
+    description: 'Přirozeně vás pravděpodobně přitahuje hledání směru, významu, souvislostí a rozhodujících priorit.',
+    low: 'Dlouhé hledání širšího obrazu vás nemusí nabíjet; směr si pravděpodobně raději ověřujete prostřednictvím konkrétní práce a výsledků.',
+    watchout: 'Při přehnaném použití může promýšlení směru oddalovat rozhodnutí nebo vzdalovat vedení každodenní realitě týmu.',
+  },
+  mentor: {
+    label: 'Růst a samostatnost',
+    short: 'Růst lidí',
+    color: '#62e3b7',
+    description: 'Smysl vám pravděpodobně přináší růst druhých, jejich učení a postupně větší samostatnost.',
+    low: 'Rozvojové rozhovory nemusí být první činností, ke které vás práce táhne; podporu lidí můžete poskytovat spíše prakticky a podle potřeby.',
+    watchout: 'Při přehnaném použití může rozvojový rozhovor nahrazovat jasnou instrukci, hranici nebo rozhodnutí, které situace právě vyžaduje.',
+  },
+  connector: {
+    label: 'Důvěra a propojení',
+    short: 'Propojení',
+    color: '#f08cff',
+    description: 'Pozornost vám pravděpodobně přirozeně míří ke vztahům, společnému zájmu a zapojení důležitých lidí.',
+    low: 'Budování širší sítě vztahů pro vás nemusí být samo o sobě přitažlivé; spolupráci pravděpodobně opíráte více o roli, úkol nebo jasnou dohodu.',
+    watchout: 'Při přehnaném použití může potřeba podpory a shody zdržovat nepříjemné rozhodnutí nebo rozmělňovat odpovědnost.',
+  },
+  organizer: {
+    label: 'Řád a spolehlivost',
+    short: 'Systém',
+    color: '#a8a3ff',
+    description: 'Přirozenou hodnotu pravděpodobně vidíte v jasných rolích, návaznostech a systému, na který se lze spolehnout.',
+    low: 'Tvorba rámců a pravidel vás nemusí sama o sobě nabíjet; pořádek pravděpodobně vytváříte hlavně tehdy, když řeší konkrétní potřebu.',
+    watchout: 'Při přehnaném použití může systém začít chránit sám sebe a omezovat pružnost, iniciativu nebo potřebnou výjimku.',
+  },
+  innovator: {
+    label: 'Změna a objevování',
+    short: 'Změna',
+    color: '#9b7cff',
+    description: 'Energii vám pravděpodobně přinášejí nové možnosti, experimentování a překonávání zažitých omezení.',
+    low: 'Samotná novost pro vás nemusí být lákavá; změnu pravděpodobně přijímáte tehdy, když má jasný praktický přínos.',
+    watchout: 'Při přehnaném použití může množství nových možností tříštit pozornost a snižovat počet skutečně dokončených změn.',
+  },
+};
+
 export const SECTIONS = [
   {
     id: 'personality', number: 'I', title: 'Osobnostní kompas', estimate: '7 min',
@@ -115,11 +166,16 @@ export const SECTIONS = [
   },
   {
     id: 'skills', number: 'II', title: 'Manažerské chování', estimate: '10 min',
-    description: 'Čtyřicet osm konkrétních projevů osmi manažerských dovedností.',
+    description: 'Čtyřicet konkrétních projevů osmi manažerských dovedností.',
     instruction: 'Hodnoťte podíl skutečných příležitostí za poslední tři měsíce. „Téměř pokaždé“ neznamená „umím to“, ale opravdu časté chování.',
   },
   {
-    id: 'situations', number: 'III', title: 'Úsudek v praxi', estimate: '11 min',
+    id: 'preferences', number: 'III', title: 'Manažerský kompas', estimate: '5 min',
+    description: 'Deset voleb mezi stejně hodnotnými prioritami odhaluje, co vás ve vedení přirozeně přitahuje a co méně.',
+    instruction: 'V každé trojici označte, co vás vystihuje nejvíc a nejméně. Zbývající možnost zůstane uprostřed. Nehodnotíte správnost ani schopnost — pouze relativní preference.',
+  },
+  {
+    id: 'situations', number: 'IV', title: 'Úsudek v praxi', estimate: '11 min',
     description: 'Dvacet dilemat s několika obhajitelnými cestami a rozdílnými kompromisy.',
     instruction: 'Vyberte, co byste pravděpodobně udělal/a jako první. Nehledejte nejdelší ani „nejhezčí“ odpověď; jednotlivé varianty zvýrazňují různé manažerské priority.',
   },
@@ -164,7 +220,6 @@ export const personalityQuestions = personalityItems.map(([id, trait, reverse, t
 
 const skillItems = {
   leadership: [
-    ['Na začátku období označím několik priorit, podle kterých má tým volit mezi úkoly.'],
     ['Když se dva důležité požadavky střetnou, rozhodnu v dohodnutém čase a vysvětlím kritéria.'],
     ['U zadání popíšu očekávaný výsledek, jeho smysl a hranice rozhodování.'],
     ['Nejasné zadání nechám běžet a upřesňuji ho až podle toho, kam se práce vyvine.', true],
@@ -173,7 +228,6 @@ const skillItems = {
   ],
   communication: [
     ['U důležitého sdělení si ověřím, jak mu druhá strana porozuměla.'],
-    ['Množství detailu a způsob vysvětlení přizpůsobím zkušenosti konkrétního člověka.'],
     ['Než odpovím na nesouhlas, shrnu vlastními slovy pohled druhé strany.'],
     ['Ticho po mém sdělení obvykle považuji za dostatečný znak souhlasu.', true],
     ['Náročný rozhovor opírám o pozorovatelná fakta, dopad a jasné očekávání.'],
@@ -181,14 +235,12 @@ const skillItems = {
   ],
   coaching: [
     ['Když člověk přinese problém, nejprve zjišťuji, co už zkusil a jaké vidí možnosti.'],
-    ['Dokážu ponechat chvíli ticha, aniž bych okamžitě doplnil/a vlastní řešení.'],
     ['Rozvojový rozhovor uzavřu konkrétním krokem, vlastníkem a termínem návratu.'],
     ['Když znám řešení, sdělím ho dříve, než si vyslechnu návrh druhého.', true],
     ['Rozlišuji, kdy člověk potřebuje instrukci, společné řešení nebo koučovací otázky.'],
     ['Po dobrém rozhovoru spoléhám, že změna přijde sama, bez dalšího kontrolního bodu.', true],
   ],
   emotional: [
-    ['Všímám si změn v tónu, energii a chování lidí, nejen obsahu jejich slov.'],
     ['Dokážu pojmenovat, jak moje momentální emoce ovlivňuje úsudek.'],
     ['Při konfliktu udržím respekt, i když s druhým zásadně nesouhlasím.'],
     ['Když mě někdo rozčílí, soustředím se hlavně na obhajobu svého pohledu.', true],
@@ -197,14 +249,12 @@ const skillItems = {
   ],
   delegation: [
     ['Při delegování vyjasním výsledek, pravomoc, hranice a kontrolní bod.'],
-    ['Náročnost úkolu přizpůsobím zkušenosti člověka v dané konkrétní činnosti.'],
     ['Po předání výsledku nechávám člověku prostor zvolit vlastní postup.'],
     ['Při první komplikaci mám tendenci převzít delegovaný úkol zpět.', true],
     ['Předem domluvím, v jaké situaci má člověk rozhodnout sám a kdy má eskalovat.'],
     ['Úkol rozdělím na malé kroky, i když by zkušený člověk zvládl odpovědnost za celek.', true],
   ],
   execution: [
-    ['Pravidelně vracím pozornost týmu k několika skutečně důležitým výsledkům.'],
     ['Dohodu uzavřu jasným vlastníkem, dalším krokem a termínem kontroly.'],
     ['Aktivně odstraňuji překážky, které tým bez mé role odstranit nemůže.'],
     ['Naléhavé drobnosti mi opakovaně vytlačují důležitou práci.', true],
@@ -213,7 +263,6 @@ const skillItems = {
   ],
   influence: [
     ['Před důležitým návrhem zjišťuji, co je podstatné pro zúčastněné lidi.'],
-    ['Vztahům a důvěře věnuji čas i tehdy, když zrovna nic nepotřebuji.'],
     ['Stejný záměr dokážu vysvětlit různými argumenty podle publika.'],
     ['Podporu pro dobrý návrh začnu řešit až na formální poradě.', true],
     ['Dokážu pojmenovat společný zájem i mezi lidmi s rozdílnými cíli.'],
@@ -221,7 +270,6 @@ const skillItems = {
   ],
   adaptability: [
     ['Po náročné situaci si určím, co příště zachovám a co změním.'],
-    ['Když se objeví nové informace, dokážu upravit svůj původní názor.'],
     ['Aktivně žádám o zpětnou vazbu i na věci, ve kterých se cítím silný/á.'],
     ['Osvědčený postup měním až ve chvíli, kdy už zjevně nefunguje.', true],
     ['Nový postup nejprve ověřím malým experimentem s předem určeným měřítkem.'],
@@ -234,6 +282,99 @@ export const skillQuestions = Object.entries(skillItems).flatMap(([skill, items]
     id: `s-${skill}-${index + 1}`, section: 'skills', skill, text, reverse, scale: FREQUENCY_SCALE,
   })),
 );
+
+export const preferenceQuestions = [
+  {
+    id: 'f01', section: 'preferences',
+    text: 'Máte nečekaně volnou hodinu pro práci na vedení týmu. Co by vám přineslo největší a nejmenší uspokojení?',
+    options: [
+      { id: 'a', preference: 'driver', text: 'Posunout důležitý úkol k viditelnému výsledku.' },
+      { id: 'b', preference: 'strategist', text: 'Ujasnit směr a několik rozhodujících priorit.' },
+      { id: 'c', preference: 'mentor', text: 'Promyslet, jak někomu rozšířit samostatnost.' },
+    ],
+  },
+  {
+    id: 'f02', section: 'preferences',
+    text: 'Na poradě se otevře téma bez jasného vlastníka. K čemu vás to nejspíš táhne?',
+    options: [
+      { id: 'a', preference: 'driver', text: 'Převzít iniciativu a rozhýbat další postup.' },
+      { id: 'b', preference: 'strategist', text: 'Nejprve zasadit téma do širších souvislostí.' },
+      { id: 'c', preference: 'connector', text: 'Propojit lidi, jejichž podpora bude rozhodující.' },
+    ],
+  },
+  {
+    id: 'f03', section: 'preferences',
+    text: 'Na konci náročného týdne máte nejlepší pocit, když se podařilo…',
+    options: [
+      { id: 'a', preference: 'driver', text: 'Dovést důležitou práci k měřitelnému posunu.' },
+      { id: 'b', preference: 'mentor', text: 'Vidět, že si někdo poradil samostatněji než dřív.' },
+      { id: 'c', preference: 'organizer', text: 'Nastavit rámec, který týmu usnadní další práci.' },
+    ],
+  },
+  {
+    id: 'f04', section: 'preferences',
+    text: 'Když tým uvízne, co vás obvykle nejvíc a nejmíň láká udělat?',
+    options: [
+      { id: 'a', preference: 'driver', text: 'Zvolit další krok a obnovit pracovní tempo.' },
+      { id: 'b', preference: 'connector', text: 'Najít společný zájem a získat potřebnou podporu.' },
+      { id: 'c', preference: 'innovator', text: 'Vyzkoušet jiný přístup v malém bezpečném pokusu.' },
+    ],
+  },
+  {
+    id: 'f05', section: 'preferences',
+    text: 'Kdybyste mohl/a zlepšit jedinou věc v práci týmu, co by vás přitahovalo nejvíc?',
+    options: [
+      { id: 'a', preference: 'driver', text: 'Zrychlit cestu od rozhodnutí k hotovému výsledku.' },
+      { id: 'b', preference: 'organizer', text: 'Zpřehlednit role, návaznosti a rytmus spolupráce.' },
+      { id: 'c', preference: 'innovator', text: 'Odstranit omezení, které brání novému způsobu práce.' },
+    ],
+  },
+  {
+    id: 'f06', section: 'preferences',
+    text: 'Při pohledu na příští půlrok vás nejvíc a nejmíň zajímá…',
+    options: [
+      { id: 'a', preference: 'strategist', text: 'Jaký směr bude mít pro tým největší význam.' },
+      { id: 'b', preference: 'mentor', text: 'Kdo může vyrůst a jakou zkušenost k tomu potřebuje.' },
+      { id: 'c', preference: 'innovator', text: 'Které nové možnosti stojí za bezpečné vyzkoušení.' },
+    ],
+  },
+  {
+    id: 'f07', section: 'preferences',
+    text: 'Při nástupu do nového týmu byste nejdřív chtěl/a porozumět…',
+    options: [
+      { id: 'a', preference: 'strategist', text: 'Kam tým míří a podle čeho volí priority.' },
+      { id: 'b', preference: 'connector', text: 'Jaké vztahy a dohody drží spolupráci pohromadě.' },
+      { id: 'c', preference: 'organizer', text: 'Jak jsou rozdělené role, informace a odpovědnost.' },
+    ],
+  },
+  {
+    id: 'f08', section: 'preferences',
+    text: 'Když dostanete složitý problém bez jasného řešení, nejvíc vás přitahuje…',
+    options: [
+      { id: 'a', preference: 'strategist', text: 'Najít vzorec, který oddělí podstatné od vedlejšího.' },
+      { id: 'b', preference: 'organizer', text: 'Rozdělit problém do přehledných kroků a návazností.' },
+      { id: 'c', preference: 'innovator', text: 'Otevřít několik neobvyklých cest a rychle je prověřit.' },
+    ],
+  },
+  {
+    id: 'f09', section: 'preferences',
+    text: 'Který přínos pro tým vám osobně připadá nejvíc a nejmíň naplňující?',
+    options: [
+      { id: 'a', preference: 'mentor', text: 'Zvyšovat schopnost lidí řešit věci bez pomoci.' },
+      { id: 'b', preference: 'connector', text: 'Vytvářet prostředí, ve kterém se lidé dokážou domluvit.' },
+      { id: 'c', preference: 'organizer', text: 'Dávat spolupráci jasný a předvídatelný rámec.' },
+    ],
+  },
+  {
+    id: 'f10', section: 'preferences',
+    text: 'Když máte možnost ovlivnit týmovou kulturu, nejvíc vás láká…',
+    options: [
+      { id: 'a', preference: 'mentor', text: 'Podporovat otevřené učení a osobní růst.' },
+      { id: 'b', preference: 'connector', text: 'Posilovat důvěru a ochotu hledat společný zájem.' },
+      { id: 'c', preference: 'innovator', text: 'Povzbuzovat zvídavost a bezpečné zkoušení nových cest.' },
+    ],
+  },
+];
 
 export const situationQuestions = [
   {
@@ -458,7 +599,7 @@ export const situationQuestions = [
   },
 ];
 
-export const allQuestions = [...personalityQuestions, ...skillQuestions, ...situationQuestions];
+export const allQuestions = [...personalityQuestions, ...skillQuestions, ...preferenceQuestions, ...situationQuestions];
 
 export const questionsBySection = Object.fromEntries(
   SECTIONS.map((section) => [section.id, allQuestions.filter((question) => question.section === section.id)]),

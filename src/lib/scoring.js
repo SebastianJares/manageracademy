@@ -1,8 +1,10 @@
 import {
   ARCHETYPES,
+  PREFERENCES,
   SKILLS,
   TRAITS,
   personalityQuestions,
+  preferenceQuestions,
   skillQuestions,
   situationQuestions,
 } from '../data/questions';
@@ -55,6 +57,47 @@ const scoreSituations = (answers) => {
   };
 };
 
+const isCompletePreference = (answer) => (
+  Boolean(answer?.most)
+  && Boolean(answer?.least)
+  && answer.most !== answer.least
+);
+
+const scorePreferences = (answers) => {
+  const points = Object.fromEntries(Object.keys(PREFERENCES).map((key) => [key, 0]));
+  const coverage = Object.fromEntries(Object.keys(PREFERENCES).map((key) => [key, 0]));
+  let completed = 0;
+
+  preferenceQuestions.forEach((question) => {
+    const answer = answers[question.id];
+    const complete = isCompletePreference(answer);
+    if (complete) completed += 1;
+
+    question.options.forEach((option) => {
+      coverage[option.preference] += 1;
+      if (!complete) {
+        points[option.preference] += 1;
+      } else if (option.id === answer.most) {
+        points[option.preference] += 2;
+      } else if (option.id !== answer.least) {
+        points[option.preference] += 1;
+      }
+    });
+  });
+
+  const scores = Object.fromEntries(Object.keys(PREFERENCES).map((key) => [
+    key,
+    coverage[key] ? round((points[key] / (coverage[key] * 2)) * 100) : 50,
+  ]));
+
+  return {
+    scores,
+    coverage,
+    completed,
+    ranking: Object.entries(scores).sort(([, a], [, b]) => b - a).map(([key]) => key),
+  };
+};
+
 const groupSpread = (questions, answers, groupKey) => {
   const grouped = {};
   questions.forEach((question) => {
@@ -71,8 +114,12 @@ const scoreResponseQuality = (answers) => {
   const values = likertQuestions
     .map((question) => Number(answers[question.id]))
     .filter(Number.isFinite);
-  const completed = values.length + situationQuestions.filter((question) => answers[question.id] != null).length;
-  const total = likertQuestions.length + situationQuestions.length;
+  const completedPreferences = preferenceQuestions
+    .filter((question) => isCompletePreference(answers[question.id])).length;
+  const completed = values.length
+    + completedPreferences
+    + situationQuestions.filter((question) => answers[question.id] != null).length;
+  const total = likertQuestions.length + preferenceQuestions.length + situationQuestions.length;
   const completion = completed / total;
   const distribution = values.reduce((result, value) => {
     result[value] = (result[value] ?? 0) + 1;
@@ -172,6 +219,44 @@ const traitContext = (skill, traits) => {
   return ` Osobnostní kontext: ${direction.charAt(0).toLowerCase()}${direction.slice(1)}`;
 };
 
+const buildPreferenceAnalysis = ({ preferenceScores, primary, secondary }) => {
+  const ranking = Object.entries(preferenceScores).sort(([, a], [, b]) => b - a);
+  const describe = ([key, score]) => ({ key, score, ...PREFERENCES[key] });
+  const top = describe(ranking[0]);
+  const second = describe(ranking[1]);
+  const low = describe(ranking.at(-1));
+  const rolePair = [primary, secondary];
+  const primaryPreferenceRank = ranking.findIndex(([key]) => key === primary) + 1;
+
+  let alignmentLabel;
+  let alignmentText;
+  if (top.key === primary) {
+    alignmentLabel = 'přirozená preference podporuje hlavní roli';
+    alignmentText = `To, co vás ve vedení relativně nejvíc přitahuje (${top.label.toLowerCase()}), odpovídá hlavní roli ${ARCHETYPES[primary].label}. Motivace a zachycený způsob práce zde pravděpodobně míří podobným směrem.`;
+  } else if (top.key === secondary) {
+    alignmentLabel = 'preference podporuje doplňující roli';
+    alignmentText = `Nejsilnější preference (${top.label.toLowerCase()}) se promítá do doplňující role ${ARCHETYPES[secondary].label}. Hlavní roli ${ARCHETYPES[primary].label} tak pravděpodobně používáte s odlišným osobním akcentem.`;
+  } else if (primaryPreferenceRank >= 5) {
+    alignmentLabel = 'schopnostní profil a zdroj energie se liší';
+    alignmentText = `Dovednosti ukazují hlavně roli ${ARCHETYPES[primary].label}, ale tato orientace nepatří mezi vaše přirozeně nejsilnější preference. Může jít o dobře naučenou pracovní roli, která vyžaduje více vědomé energie, nebo o vliv současného pracovního prostředí.`;
+  } else {
+    alignmentLabel = 'preference rozšiřuje schopnostní profil';
+    alignmentText = `Dovednostní profil směřuje k roli ${ARCHETYPES[primary].label}, zatímco nejvíc vás přitahuje ${top.label.toLowerCase()}. Nejde o rozpor: preference popisuje zdroj energie, kdežto role vychází z deklarovaného chování a situačního úsudku.`;
+  }
+
+  return {
+    title: `${top.short} + ${second.short}`,
+    top,
+    second,
+    low,
+    rolePair,
+    alignmentLabel,
+    alignmentText,
+    watchout: top.watchout,
+    note: 'Skóre je relativní uvnitř jednoho profilu: vyšší výsledek jedné orientace nutně snižuje prostor pro jiné. Není to percentil ani důkaz schopnosti a neslouží k porovnávání lidí.',
+  };
+};
+
 const buildPatterns = (skills, traits, selfReportedSkills, situationalSkills) => {
   const patterns = [];
   const add = (title, text, action) => patterns.push({ title, text, action });
@@ -213,7 +298,7 @@ const buildPatterns = (skills, traits, selfReportedSkills, situationalSkills) =>
   return patterns.slice(0, 3);
 };
 
-const buildAnalysis = ({ primary, secondary, skills, traits, selfReportedSkills, situationalSkills }) => {
+const buildAnalysis = ({ primary, secondary, skills, traits, selfReportedSkills, situationalSkills, preferenceScores }) => {
   const ranked = Object.entries(skills).sort(([, a], [, b]) => b - a);
   const strengths = ranked.slice(0, 3).map(([key, score]) => ({
     key,
@@ -242,11 +327,13 @@ const buildAnalysis = ({ primary, secondary, skills, traits, selfReportedSkills,
     .map((key) => Math.abs(selfReportedSkills[key] - situationalSkills[key]))
     .filter(Number.isFinite);
   const meanGap = round(average(gaps));
+  const preference = buildPreferenceAnalysis({ preferenceScores, primary, secondary });
 
   return {
     role: ROLE_DETAILS[primary],
     secondaryRole: ROLE_DETAILS[secondary],
-    summary: `Váš profil nejvíce připomíná roli ${ARCHETYPES[primary].label}, kterou doplňuje ${ARCHETYPES[secondary].label.toLowerCase()}. Relativní oporou je ${strengths[0].label.toLowerCase()}, zatímco největší okamžitou páku pro rozvoj nabízí ${priority.label.toLowerCase()}.`,
+    summary: `Váš profil nejvíce připomíná roli ${ARCHETYPES[primary].label}, kterou doplňuje ${ARCHETYPES[secondary].label.toLowerCase()}. Přirozeně vás nejvíc přitahuje ${preference.top.label.toLowerCase()} a ${preference.second.label.toLowerCase()}. Relativní oporou je ${strengths[0].label.toLowerCase()}, zatímco největší okamžitou páku pro rozvoj nabízí ${priority.label.toLowerCase()}.`,
+    preference,
     strengths,
     development,
     priority,
@@ -278,6 +365,7 @@ export const calculateProfile = (answers, identity = {}) => {
   const traits = scoreGroupedLikert(personalityQuestions, answers, 'trait', TRAITS);
   const selfReportedSkills = scoreGroupedLikert(skillQuestions, answers, 'skill', SKILLS);
   const situational = scoreSituations(answers);
+  const preferences = scorePreferences(answers);
   const skills = Object.fromEntries(Object.keys(SKILLS).map((skill) => {
     const situationalScore = situational.scores[skill];
     const combined = situationalScore == null
@@ -290,11 +378,19 @@ export const calculateProfile = (answers, identity = {}) => {
   const rankedArchetypes = Object.entries(archetypeScores).sort(([, a], [, b]) => b - a);
   const primary = rankedArchetypes[0][0];
   const secondary = rankedArchetypes[1][0];
-  const analysis = buildAnalysis({ primary, secondary, skills, traits, selfReportedSkills, situationalSkills: situational.scores });
+  const analysis = buildAnalysis({
+    primary,
+    secondary,
+    skills,
+    traits,
+    selfReportedSkills,
+    situationalSkills: situational.scores,
+    preferenceScores: preferences.scores,
+  });
 
   return {
     id: globalThis.crypto?.randomUUID?.() ?? `attempt-${Date.now()}`,
-    version: 2,
+    version: 3,
     createdAt: new Date().toISOString(),
     identity: {
       name: identity.name?.trim() || 'Bezejmenný manažer',
@@ -306,6 +402,9 @@ export const calculateProfile = (answers, identity = {}) => {
     archetypeScores,
     traits,
     traitSummary: buildTraitSummary(traits),
+    preferenceScores: preferences.scores,
+    preferenceRanking: preferences.ranking,
+    preferenceCoverage: preferences.coverage,
     selfReportedSkills,
     situationalSkills: situational.scores,
     situationCoverage: situational.coverage,

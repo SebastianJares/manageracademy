@@ -4,6 +4,7 @@ Interaktivní sebereflexní aplikace pro účastníky Manažerské akademie. Pro
 
 - osobnostní pracovní tendence;
 - osm pozorovatelných manažerských dovedností;
+- relativní preference mezi šesti stejně hodnotnými manažerskými orientacemi;
 - situační úsudek v realistických provozních situacích;
 - výslednou kartu manažera, detailní interpretaci a konkrétní rozvojový plán.
 
@@ -16,10 +17,11 @@ Podrobný základ konstrukce a plán validace je v [docs/METODIKA.md](docs/METOD
 ## Funkce
 
 - úvodní obrazovka s jediným tlačítkem „Spustit“;
-- 3 části a celkem 98 položek;
-- 30 položek pracovních tendencí, 48 behaviorálních položek a 20 situačních dilemat;
+- 4 části a celkem 100 položek;
+- 30 položek pracovních tendencí, 40 behaviorálních položek, 10 vyvážených forced-choice bloků a 20 situačních dilemat;
 - průběžné ukládání do `localStorage`;
 - šest srozumitelných manažerských rolí: Tahoun, Stratég, Mentor, Spojovatel, Organizátor a Inovátor;
+- barevný „Manažerský kompas“, který odděluje přirozené priority od schopností;
 - osm dovedností v rozsahu 0–100 a herních statistikách 8–20;
 - vektorové mini-scény vysvětlující každou roli;
 - stažení výsledné karty jako PNG;

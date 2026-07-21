@@ -1,4 +1,4 @@
-const STORAGE_KEY = 'manager-academy-profile-v2';
+const STORAGE_KEY = 'manager-academy-profile-v3';
 
 const emptyState = {
   identity: { name: '', role: '' },

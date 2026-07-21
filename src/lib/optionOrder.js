@@ -11,5 +11,8 @@ export const stableHash = (value) => {
   return (hash ^ (hash >>> 16)) >>> 0;
 };
 
-export const orderSituationOptions = (question) => [...question.options]
+const orderOptions = (question) => [...question.options]
   .sort((a, b) => stableHash(`${question.id}:${a.id}`) - stableHash(`${question.id}:${b.id}`));
+
+export const orderSituationOptions = orderOptions;
+export const orderPreferenceOptions = orderOptions;

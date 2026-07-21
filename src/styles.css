@@ -398,6 +398,23 @@ button:focus-visible, input:focus-visible {
 .option-arrow { justify-self: end; color: #566379; }
 .situation-option:hover .option-arrow { color: var(--teal); }
 
+.preference-card { width: min(980px, 100%); }
+.preference-card h1 { margin-bottom: 25px; font-size: clamp(23px, 3vw, 36px); }
+.preference-wrap { display: grid; gap: 14px; }
+.preference-helper { display: flex; justify-content: center; gap: 24px; color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .08em; }
+.preference-helper strong { color: var(--gold); }
+.preference-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 13px; }
+.preference-option { position: relative; min-height: 210px; display: flex; flex-direction: column; padding: 17px; border: 1px solid var(--line); border-radius: 20px; background: rgba(15,21,38,.68); transition: border-color .18s ease, background .18s ease, transform .18s ease; }
+.preference-option:hover { transform: translateY(-2px); border-color: rgba(255,255,255,.16); }
+.preference-option.is-most { border-color: rgba(85,228,207,.52); background: rgba(85,228,207,.07); }
+.preference-option.is-least { border-color: rgba(240,188,105,.4); background: rgba(240,188,105,.045); }
+.preference-option > p { flex: 1; margin: 18px 2px 20px; color: var(--soft); font-family: 'Manrope'; font-size: 16px; line-height: 1.55; }
+.preference-ranks { display: grid; gap: 7px; }
+.preference-ranks button { min-height: 36px; display: flex; justify-content: center; align-items: center; gap: 6px; padding: 8px; border: 1px solid var(--line); border-radius: 10px; background: rgba(255,255,255,.025); color: var(--muted); cursor: pointer; font-size: 9px; transition: border-color .18s ease, color .18s ease, background .18s ease; }
+.preference-ranks button:first-child:hover, .preference-ranks button:first-child.selected { border-color: rgba(85,228,207,.42); background: rgba(85,228,207,.09); color: var(--teal); }
+.preference-ranks button:last-child:hover, .preference-ranks button:last-child.selected { border-color: rgba(240,188,105,.36); background: rgba(240,188,105,.07); color: #e4c78e; }
+.preference-note { margin: 2px 0 0; text-align: center; color: #5f6d82; font-size: 9px; }
+
 /* Archetype vector scenes */
 .archetype-art { display: block; width: 100%; height: auto; }
 .art-route { fill: none; stroke: currentColor; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
@@ -453,6 +470,11 @@ button:focus-visible, input:focus-visible {
 .role-plaque strong { margin-top: 2px; color: var(--role-color); font-family: 'Manrope'; font-size: 22px; }
 .role-plaque small { color: var(--soft); font-size: 10px; }
 .card-motto { margin: 20px auto; max-width: 480px; color: var(--soft); text-align: center; font-family: 'Manrope'; font-size: 13px; line-height: 1.5; font-style: italic; }
+.card-preference-signature { position: relative; overflow: hidden; display: flex; justify-content: space-between; align-items: center; gap: 14px; margin: 0 0 15px; padding: 11px 14px; border: 1px solid rgba(255,255,255,.08); border-radius: 13px; background: linear-gradient(90deg, color-mix(in srgb, var(--preference-a) 11%, transparent), color-mix(in srgb, var(--preference-b) 11%, transparent)); }
+.card-preference-signature::before { content: ''; position: absolute; inset: 0 auto 0 0; width: 3px; background: linear-gradient(var(--preference-a), var(--preference-b)); }
+.card-preference-signature > span { color: var(--muted); font-size: 8px; letter-spacing: .1em; text-transform: uppercase; }
+.card-preference-signature strong { color: var(--soft); font-size: 10px; }
+.card-preference-signature small { margin: 0 4px; color: var(--muted); }
 .card-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
 .stat-block.compact { min-width: 0; padding: 10px 9px; border-radius: 11px; background: rgba(255,255,255,.035); border: 1px solid rgba(255,255,255,.055); }
 .stat-block.compact .stat-heading { display: grid; gap: 2px; justify-items: center; }
@@ -511,6 +533,27 @@ button:focus-visible, input:focus-visible {
 .analysis-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 18px 22px; border: 1px solid var(--line); border-radius: 20px; background: rgba(10,14,25,.55); }
 .analysis-toolbar p { margin: 5px 0 0; color: var(--muted); font-size: 11px; }
 .analysis-overview-grid { display: grid; grid-template-columns: 1.25fr .75fr; gap: 18px; }
+.preference-profile-panel { position: relative; overflow: hidden; display: grid; grid-template-columns: .9fr 1.1fr; gap: clamp(24px, 4vw, 54px); padding: clamp(27px, 4vw, 44px); border-radius: 27px; box-shadow: none; }
+.preference-profile-panel::before { content: ''; position: absolute; width: 420px; height: 250px; left: -120px; top: -150px; border-radius: 50%; background: linear-gradient(90deg, var(--preference-a), var(--preference-b)); opacity: .09; filter: blur(48px); pointer-events: none; }
+.preference-profile-copy, .preference-profile-data { position: relative; z-index: 1; }
+.preference-profile-copy h2 { margin: 9px 0 15px; font-family: 'Manrope'; font-size: clamp(25px, 3.4vw, 39px); letter-spacing: -.035em; }
+.preference-profile-copy > p { margin: 8px 0; color: var(--muted); font-size: 11px; line-height: 1.65; }
+.preference-alignment { display: grid; gap: 5px; margin-top: 20px; padding: 15px 17px; border-left: 3px solid var(--preference-a); border-radius: 0 14px 14px 0; background: rgba(255,255,255,.03); }
+.preference-alignment strong { color: var(--soft); font-size: 11px; text-transform: capitalize; }
+.preference-alignment span { color: var(--muted); font-size: 10px; line-height: 1.6; }
+.preference-list { display: grid; gap: 12px; }
+.preference-bar > div:first-child { display: flex; justify-content: space-between; align-items: center; color: var(--soft); font-size: 10px; }
+.preference-bar > div:first-child span { display: flex; align-items: center; gap: 7px; }
+.preference-bar i { width: 7px; height: 7px; border-radius: 50%; box-shadow: 0 0 10px currentColor; }
+.preference-bar strong { color: var(--soft); font-variant-numeric: tabular-nums; }
+.preference-track { height: 4px; margin-top: 6px; overflow: hidden; border-radius: 4px; background: rgba(255,255,255,.07); }
+.preference-track span { display: block; height: 100%; border-radius: inherit; }
+.preference-low-note { display: grid; gap: 5px; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
+.preference-low-note strong { color: var(--soft); font-size: 10px; }
+.preference-low-note span { color: var(--muted); font-size: 9px; line-height: 1.55; }
+.preference-profile-data > small { display: block; margin-top: 13px; color: #637187; font-size: 8px; line-height: 1.5; }
+.preference-shadow { grid-column: 1 / -1; position: relative; z-index: 1; display: grid; grid-template-columns: auto 1fr; gap: 15px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: 10px; line-height: 1.55; }
+.preference-shadow strong { color: #dbc18b; }
 .role-profile-panel h2 small { color: var(--muted); font-size: .55em; font-weight: 500; }
 .role-profile-panel > p, .evidence-panel > p, .panel-lead { color: var(--muted); font-size: 12px; line-height: 1.65; }
 .role-bullets { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 18px; }
@@ -598,6 +641,7 @@ button:focus-visible, input:focus-visible {
   .result-aside { position: static; max-width: 650px; margin: 0 auto; }
   .validity-panel { grid-column: auto; }
   .analysis-overview-grid, .refined-analysis-grid { grid-template-columns: 1fr; }
+  .preference-profile-panel { grid-template-columns: 1fr; }
   .insight-card-grid, .pattern-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
@@ -628,6 +672,11 @@ button:focus-visible, input:focus-visible {
   .likert-option small { font-size: 9px; }
   .situation-option { grid-template-columns: 32px 1fr; padding: 14px; font-size: 13px; line-height: 1.45; }
   .situation-option .option-arrow { display: none; }
+  .preference-options { grid-template-columns: 1fr; }
+  .preference-option { min-height: 0; }
+  .preference-option > p { margin: 13px 0 16px; font-size: 14px; }
+  .preference-ranks { grid-template-columns: 1fr 1fr; }
+  .preference-helper { gap: 14px; font-size: 8px; }
   .result-hero { padding-top: 44px; }
   .result-hero h1 { font-size: 39px; }
   .result-tabs { width: 100%; }
@@ -661,6 +710,9 @@ button:focus-visible, input:focus-visible {
   .likert-1 .likert-dot, .likert-5 .likert-dot { width: 49px; }
   .likert-option small { max-width: 62px; }
   .card-motto { font-size: 11px; }
+  .card-preference-signature { align-items: flex-start; flex-direction: column; gap: 4px; }
+  .preference-ranks { grid-template-columns: 1fr; }
+  .preference-shadow { grid-template-columns: 1fr; }
 }
 
 @media (prefers-reduced-motion: reduce) {

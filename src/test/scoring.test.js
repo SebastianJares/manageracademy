@@ -1,40 +1,90 @@
 import { describe, expect, it } from 'vitest';
 import {
   SKILLS,
+  PREFERENCES,
   TRAITS,
   allQuestions,
   personalityQuestions,
+  preferenceQuestions,
   skillQuestions,
   situationQuestions,
 } from '../data/questions';
 import { calculateProfile, scoreToStat } from '../lib/scoring';
 import { buildAnalysisHtml, buildOutlookEml } from '../lib/reports';
-import { orderSituationOptions } from '../lib/optionOrder';
+import { orderPreferenceOptions, orderSituationOptions } from '../lib/optionOrder';
+
+const balancedPreferenceAnswers = {
+  f01: { most: 'a', least: 'b' },
+  f02: { most: 'a', least: 'b' },
+  f03: { most: 'b', least: 'a' },
+  f04: { most: 'b', least: 'a' },
+  f05: { most: 'b', least: 'c' },
+  f06: { most: 'a', least: 'b' },
+  f07: { most: 'a', least: 'b' },
+  f08: { most: 'c', least: 'b' },
+  f09: { most: 'a', least: 'b' },
+  f10: { most: 'b', least: 'a' },
+};
 
 const neutralAnswers = Object.fromEntries(allQuestions.map((question) => [
   question.id,
-  question.section === 'situations' ? question.options[0].id : 3,
+  question.section === 'situations'
+    ? question.options[0].id
+    : question.section === 'preferences'
+      ? balancedPreferenceAnswers[question.id]
+      : 3,
 ]));
 
 const averageSkill = (profile) => Object.values(profile.skills)
   .reduce((sum, score) => sum + score, 0) / Object.keys(profile.skills).length;
 
 describe('assessment construction', () => {
-  it('contains 98 unique items across three complementary methods', () => {
-    expect(allQuestions).toHaveLength(98);
+  it('contains 100 unique items across four complementary methods', () => {
+    expect(allQuestions).toHaveLength(100);
     expect(personalityQuestions).toHaveLength(30);
-    expect(skillQuestions).toHaveLength(48);
+    expect(skillQuestions).toHaveLength(40);
+    expect(preferenceQuestions).toHaveLength(10);
     expect(situationQuestions).toHaveLength(20);
     expect(new Set(allQuestions.map((question) => question.id)).size).toBe(allQuestions.length);
   });
 
-  it('uses six items per trait and six behavioral items per skill', () => {
+  it('uses six items per trait and five behavioral items per skill', () => {
     Object.keys(TRAITS).forEach((trait) => {
       expect(personalityQuestions.filter((question) => question.trait === trait)).toHaveLength(6);
     });
     Object.keys(SKILLS).forEach((skill) => {
-      expect(skillQuestions.filter((question) => question.skill === skill)).toHaveLength(6);
+      expect(skillQuestions.filter((question) => question.skill === skill)).toHaveLength(5);
     });
+  });
+
+  it('balances every managerial preference and every pair equally', () => {
+    const coverage = Object.fromEntries(Object.keys(PREFERENCES).map((key) => [key, 0]));
+    const pairs = {};
+    preferenceQuestions.forEach((question) => {
+      expect(question.options).toHaveLength(3);
+      expect(new Set(question.options.map((option) => option.preference)).size).toBe(3);
+      question.options.forEach((option) => { coverage[option.preference] += 1; });
+      const keys = question.options.map((option) => option.preference).sort();
+      for (let left = 0; left < keys.length; left += 1) {
+        for (let right = left + 1; right < keys.length; right += 1) {
+          const pair = `${keys[left]}:${keys[right]}`;
+          pairs[pair] = (pairs[pair] ?? 0) + 1;
+        }
+      }
+      const lengths = question.options.map((option) => option.text.length);
+      expect(Math.max(...lengths) / Math.min(...lengths)).toBeLessThanOrEqual(1.4);
+    });
+    expect(new Set(Object.values(coverage))).toEqual(new Set([5]));
+    expect(Object.keys(pairs)).toHaveLength(15);
+    expect(new Set(Object.values(pairs))).toEqual(new Set([2]));
+  });
+
+  it('does not bind a preference to one display position', () => {
+    const positions = Object.fromEntries(Object.keys(PREFERENCES).map((key) => [key, new Set()]));
+    preferenceQuestions.forEach((question) => {
+      orderPreferenceOptions(question).forEach((option, index) => positions[option.preference].add(index));
+    });
+    Object.values(positions).forEach((used) => expect(used.size).toBeGreaterThanOrEqual(2));
   });
 
   it('covers every skill in at least five situational dilemmas', () => {
@@ -85,6 +135,9 @@ describe('manager profile scoring', () => {
     expect(profile.secondary).toBeTruthy();
     expect(Object.keys(profile.skills)).toHaveLength(8);
     expect(Object.keys(profile.traits)).toHaveLength(5);
+    expect(Object.keys(profile.preferenceScores)).toHaveLength(6);
+    expect(profile.analysis.preference.top).toBeTruthy();
+    expect(profile.analysis.preference.second).toBeTruthy();
     expect(profile.analysis.strengths).toHaveLength(3);
     expect(profile.analysis.development).toHaveLength(3);
     expect(profile.analysis.plan).toHaveLength(4);
@@ -117,12 +170,31 @@ describe('manager profile scoring', () => {
     expect(averageSkill(alignedProfile)).toBeGreaterThan(averageSkill(acquiescentProfile));
   });
 
+  it('separates preferred orientation from managerial skill scores', () => {
+    const driverAnswers = { ...neutralAnswers };
+    preferenceQuestions.forEach((question) => {
+      const driver = question.options.find((option) => option.preference === 'driver');
+      if (!driver) return;
+      const least = question.options.find((option) => option.id !== driver.id);
+      driverAnswers[question.id] = { most: driver.id, least: least.id };
+    });
+    const neutralProfile = calculateProfile(neutralAnswers);
+    const driverProfile = calculateProfile(driverAnswers);
+    expect(driverProfile.preferenceScores.driver).toBeGreaterThan(neutralProfile.preferenceScores.driver);
+    expect(driverProfile.skills).toEqual(neutralProfile.skills);
+  });
+
   it('keeps every score finite and bounded across varied answer patterns', () => {
     for (let run = 0; run < 100; run += 1) {
       const answers = Object.fromEntries(allQuestions.map((question) => [
         question.id,
         question.section === 'situations'
           ? question.options[Math.floor(Math.random() * question.options.length)].id
+          : question.section === 'preferences'
+            ? (() => {
+              const options = [...question.options].sort(() => Math.random() - 0.5);
+              return { most: options[0].id, least: options[1].id };
+            })()
           : 1 + Math.floor(Math.random() * 5),
       ]));
       const profile = calculateProfile(answers);
@@ -136,6 +208,7 @@ describe('manager profile scoring', () => {
         expect(stat).toBeLessThanOrEqual(20);
       });
       expect(profile.primary).not.toBe(profile.secondary);
+      expect(Object.values(profile.preferenceScores).reduce((sum, score) => sum + score, 0)).toBe(300);
       expect(Number.isFinite(profile.analysis.alignment.gap)).toBe(true);
     }
   });
@@ -148,6 +221,7 @@ describe('standalone outputs', () => {
     expect(html).toContain('Manažerská analýza');
     expect(html).toContain('Alex');
     expect(html).toContain('Pravděpodobné silné stránky');
+    expect(html).toContain('Manažerský kompas');
     expect(html).toContain('Literatura a zdroje');
     expect(html).toContain('uložit jako PDF');
   });
