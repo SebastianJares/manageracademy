@@ -1,4 +1,4 @@
-const STORAGE_KEY = 'manager-academy-profile-v1';
+const STORAGE_KEY = 'manager-academy-profile-v2';
 
 const emptyState = {
   identity: { name: '', role: '' },
@@ -42,4 +42,3 @@ export const exportState = (state) => {
   link.click();
   URL.revokeObjectURL(url);
 };
-
